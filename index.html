@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Password Generator</title>
+  <style>
+    :root{
+      --bg:#0f1724; /* dark navy */
+      --card:#0b1220;
+      --accent: #7c5cff;
+      --muted:#9aa4b2;
+      --glass: rgba(255,255,255,0.03);
+      --success: #10b981;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef6;background:linear-gradient(180deg,var(--bg) 0%, #08101a 100%);}
+
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:40px}
+
+    .card{
+      width:100%;max-width:760px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:26px;box-shadow:0 8px 30px rgba(2,6,23,0.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.03)
+    }
+
+    .header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .logo{width:52px;height:52px;background:linear-gradient(135deg,var(--accent),#4cc9f0);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#021224}
+    .title{font-size:18px;font-weight:700}
+    .subtitle{font-size:13px;color:var(--muted);margin-top:4px}
+
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+
+    label.switch{
+      display:flex;align-items:center;gap:10px;background:var(--glass);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)
+    }
+
+    input[type=range]{width:100%}
+
+    .output{
+      margin-top:14px;padding:12px;border-radius:10px;background:#06131c;border:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;gap:12px
+    }
+
+    .pwtext{flex:1;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-weight:600}
+
+    .btn{background:linear-gradient(90deg,var(--accent),#4cc9f0);border:none;color:#021224;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+    .controls small{display:block;color:var(--muted);margin-top:6px}
+
+    .strength{
+      height:10px;border-radius:999px;background:rgba(255,255,255,0.04);overflow:hidden;margin-top:8px
+    }
+    .strength > i{display:block;height:100%;width:0%;transition:width 220ms ease}
+
+    .row-bottom{display:flex;gap:12px;margin-top:12px;align-items:center;justify-content:space-between}
+
+    .legend{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:13px}
+    .legend span{display:inline-flex;width:10px;height:10px;border-radius:3px}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* Responsive */
+    @media (max-width:720px){
+      .controls{grid-template-columns:1fr}
+      .row{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="application" aria-label="Password generator">
+      <div class="header">
+        <div class="logo">PW</div>
+        <div>
+          <div class="title">Strong Password Generator</div>
+          <div class="subtitle">Choose length & character sets — click Generate. Click copy to save.</div>
+        </div>
+      </div>
+
+
+      <div class="output" aria-live="polite">
+        <div class="pwtext" id="password">Click Generate</div>
+        <button class="btn" id="copyBtn" title="Copy password">Copy</button>
+      </div>
+
+
+      <div class="controls">
+        <label class="switch" title="Include lowercase letters">
+          <input type="checkbox" id="lowercase" checked>
+          <div>
+            <div style="font-weight:700">Lowercase</div>
+            <small>abc...z</small>
+          </div>
+        </label>
+
+        <label class="switch" title="Include uppercase letters">
+          <input type="checkbox" id="uppercase" checked>
+          <div>
+            <div style="font-weight:700">Uppercase</div>
+            <small>ABC...Z</small>
+          </div>
+        </label>
+
+        <label class="switch" title="Include numbers">
+          <input type="checkbox" id="numbers" checked>
+          <div>
+            <div style="font-weight:700">Numbers</div>
+            <small>0-9</small>
+          </div>
+        </label>
+
+        <label class="switch" title="Include symbols">
+          <input type="checkbox" id="symbols" checked>
+          <div>
+            <div style="font-weight:700">Symbols</div>
+            <small>!@#$...</small>
+          </div>
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--glass);border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+          <div style="font-weight:700">Length <span id="lenLabel" style="float:right;font-weight:600">16</span></div>
+          <input type="range" id="length" min="6" max="64" value="16">
+          <small>Longer passwords are usually stronger.</small>
+        </label>
+
+        <label style="display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--glass);border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+          <div style="font-weight:700">Avoid ambiguous chars</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+            <input type="checkbox" id="avoidAmbiguous">
+            <small class="muted">Exclude: i, l, 1, L, o, 0, O</small>
+          </div>
+        </label>
+      </div>
+
+      <div class="row-bottom">
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="generate">Generate</button>
+          <button class="btn ghost" id="shuffle">Shuffle</button>
+        </div>
+
+        <div style="width:50%;min-width:160px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:700">Strength</div>
+            <div id="entropyText" style="font-weight:700;color:var(--muted);font-size:13px">—</div>
+          </div>
+          <div class="strength" aria-hidden="true"><i id="strengthBar"></i></div>
+        </div>
+      </div>
+
+      <div class="legend" style="margin-top:10px">
+        <div><span style="background:#ef4444"></span>Weak</div>
+        <div><span style="background:#f59e0b"></span>Medium</div>
+        <div><span style="background:var(--success)"></span>Strong</div>
+      </div>
+
+      <footer>Tip: Use a unique password per account and store it in a password manager.</footer>
+    </div>
+  </div>
+
+  <script>
+
+    const SETS = {
+      lower: 'abcdefghijklmnopqrstuvwxyz',
+      upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      numbers: '0123456789',
+      symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+    };
+
+    const el = id => document.getElementById(id);
+    const passwordEl = el('password');
+    const copyBtn = el('copyBtn');
+    const generateBtn = el('generate');
+    const shuffleBtn = el('shuffle');
+    const lengthInput = el('length');
+    const lenLabel = el('lenLabel');
+    const strengthBar = el('strengthBar');
+    const entropyText = el('entropyText');
+
+
+    lengthInput.addEventListener('input', () => { lenLabel.textContent = lengthInput.value; });
+
+
+    function generatePassword() {
+      const length = Number(lengthInput.value);
+      const useLower = el('lowercase').checked;
+      const useUpper = el('uppercase').checked;
+      const useNumbers = el('numbers').checked;
+      const useSymbols = el('symbols').checked;
+      const avoidAmb = el('avoidAmbiguous').checked;
+
+      let pool = '';
+      if(useLower) pool += SETS.lower;
+      if(useUpper) pool += SETS.upper;
+      if(useNumbers) pool += SETS.numbers;
+      if(useSymbols) pool += SETS.symbols;
+
+      if(!pool) {
+        passwordEl.textContent = 'Select at least one character set';
+        return;
+      }
+
+      if(avoidAmb) {
+        pool = pool.replace(/[il1Lo0O]/g, '');
+      }
+
+
+      const array = new Uint32Array(length);
+      if(window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(array);
+      } else {
+        for(let i=0;i<length;i++) array[i] = Math.floor(Math.random()*4294967295);
+      }
+
+      let pwd = '';
+      for(let i=0;i<length;i++){
+        const idx = array[i] % pool.length;
+        pwd += pool.charAt(idx);
+      }
+
+      passwordEl.textContent = pwd;
+      updateStrength(pwd, pool.length);
+    }
+
+
+    function shufflePassword() {
+      const pwd = passwordEl.textContent;
+      if(!pwd || pwd === 'Click Generate' || pwd.startsWith('Select')) return;
+      const arr = pwd.split('');
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor((Math.random()) * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      passwordEl.textContent = arr.join('');
+    }
+
+
+    copyBtn.addEventListener('click', async () => {
+      const txt = passwordEl.textContent;
+      if(!txt || txt === 'Click Generate' || txt.startsWith('Select')) return;
+      try{
+        await navigator.clipboard.writeText(txt);
+        const orig = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(()=> copyBtn.textContent = 'Copy', 1400);
+      }catch(e){
+
+        const ta = document.createElement('textarea');
+        ta.value = txt; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); copyBtn.textContent='Copied!'; setTimeout(()=> copyBtn.textContent='Copy',1400);}catch(e){}
+        ta.remove();
+      }
+    });
+
+    generateBtn.addEventListener('click', generatePassword);
+    shuffleBtn.addEventListener('click', shufflePassword);
+
+
+    function updateStrength(pwd, poolSize){
+      const length = pwd.length || Number(lengthInput.value);
+      const entropy = poolSize > 0 ? (length * Math.log2(poolSize)) : 0;
+
+      const pct = Math.min((entropy / 128) * 100, 100); // treat 128 bits as fully strong
+      strengthBar.style.width = pct + '%';
+
+
+      if(entropy < 40){
+        strengthBar.style.background = '#ef4444';
+        entropyText.textContent = Math.round(entropy) + ' bits — Weak';
+      } else if(entropy < 80){
+        strengthBar.style.background = '#f59e0b';
+        entropyText.textContent = Math.round(entropy) + ' bits — Medium';
+      } else {
+        strengthBar.style.background = 'var(--success)';
+        entropyText.textContent = Math.round(entropy) + ' bits — Strong';
+      }
+    }
+
+
+    window.addEventListener('DOMContentLoaded', () => {
+      generatePassword();
+    });
+  </script>
+</body>
+</html>
+
